@@ -1,5 +1,8 @@
 {
-  "client1": "OK (90 days left)",
-  "client2": "⚠️ Expiring in 5 days",
-  "client3": "❌ Expired"
+  "status": "success",
+  "checked_at": "2025-07-14T12:00:00Z",
+  "details": {
+    "vpn": "connected",
+    "roundcube": "login_ok"
+  }
 }

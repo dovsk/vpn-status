@@ -1,17 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>VPN Cert Expiry</title>
+  <meta charset="UTF-8">
+  <title>VPN Cert Expiry Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      color: #333;
+      margin: 1rem;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    ul.cert-list {
+      list-style: none;
+      padding: 0;
+      max-width: 600px;
+      margin: 1rem auto;
+    }
+    ul.cert-list li {
+      background: #fff;
+      margin: 0.5rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .status-ok {
+      color: green;
+      font-weight: bold;
+    }
+    .status-warning {
+      color: orange;
+      font-weight: bold;
+    }
+    .status-expired {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <h1>VPN Cert Expiry Status</h1>
-  <pre id="json"></pre>
+  <ul id="cert-list" class="cert-list">
+    <!-- Items will be injected here -->
+  </ul>
 
   <script>
     fetch('data.json')
-      .then(response => response.json())
+      .then(resp => resp.json())
       .then(data => {
-        document.getElementById('json').textContent = JSON.stringify(data, null, 2);
+        const ul = document.getElementById('cert-list');
+        ul.innerHTML = '';  // clear placeholder
+
+        Object.entries(data).forEach(([client, status]) => {
+          const li = document.createElement('li');
+          const label = document.createElement('span');
+          label.textContent = client;
+          const stat = document.createElement('span');
+          stat.textContent = status;
+
+          // Assign a CSS class based on the status text
+          if (status.toLowerCase().includes('expired')) {
+            stat.classList.add('status-expired');
+          } else if (status.includes('⚠️')) {
+            stat.classList.add('status-warning');
+          } else {
+            stat.classList.add('status-ok');
+          }
+
+          li.append(label, stat);
+          ul.append(li);
+        });
+      })
+      .catch(err => {
+        document.getElementById('cert-list').innerHTML = `<li style="color:red;">Error loading JSON: ${err}</li>`;
       });
   </script>
 </body>

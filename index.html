@@ -1,47 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>VPN Health Status</title>
+  <meta charset="UTF-8" />
+  <title>VPN Health Dashboard</title>
   <style>
-    body { font-family: sans-serif; background:#fafafa; color:#333; padding:1rem; }
+    body { font-family: sans-serif; background:#f4f4f9; color:#333; padding:2rem; }
     h1 { text-align:center; color:#2c3e50; }
-    dl { max-width:400px; margin:1rem auto; background:#fff; padding:1rem; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-    dt { font-weight:bold; margin-top:1rem; }
-    dd { margin:0 0 1rem 1rem; }
-    .status-success { color:green; }
-    .status-vpn_failed, .status-roundcube_failed { color:red; }
+    .card {
+      background:#fff; padding:1rem; margin:1rem auto;
+      border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.1);
+      max-width:400px;
+    }
+    .status-success { color: green; font-weight: bold; }
+    .status-vpn_failed,
+    .status-roundcube_failed { color: red; font-weight: bold; }
+    dt { font-weight: bold; margin-top:0.5rem; }
+    dd { margin:0 0 0.5rem 1rem; }
   </style>
 </head>
 <body>
-  <h1>VPN Health Check</h1>
-  <dl id="status-list">
-    <dt>Loading...</dt>
-  </dl>
+  <h1>VPN Health Dashboard</h1>
+  <div id="dashboard"></div>
 
   <script>
     fetch('data.json')
-      .then(res => {
-        if(!res.ok) throw new Error(res.status);
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => {
-        const dl = document.getElementById('status-list');
-        dl.innerHTML = '';
+        const container = document.getElementById('dashboard');
+        container.innerHTML = '';
 
-        const addItem = (key, val) => {
-          const dt = document.createElement('dt');
-          dt.textContent = key.replace('_',' ');
-          const dd = document.createElement('dd');
-          dd.textContent = val;
-          dd.className = 'status-' + (val || '').toString().toLowerCase();
-          dl.append(dt, dd);
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const dl = document.createElement('dl');
+
+        // Top-level status and timestamp
+        const mappings = {
+          status: 'Overall Status',
+          checked_at: 'Checked At'
         };
+        Object.entries(mappings).forEach(([key, label]) => {
+          if (data[key]) {
+            const dt = document.createElement('dt');
+            dt.textContent = label;
+            const dd = document.createElement('dd');
+            dd.textContent = data[key];
+            if (key === 'status') dd.className = 'status-' + data[key];
+            dl.append(dt, dd);
+          }
+        });
 
-        Object.entries(data).forEach(([k,v]) => addItem(k, v));
+        // Nested details object
+        if (data.details) {
+          const dt = document.createElement('dt');
+          dt.textContent = 'Details';
+          dl.append(dt);
+          Object.entries(data.details).forEach(([subKey, subVal]) => {
+            const dd = document.createElement('dd');
+            dd.textContent = `→ ${subKey}: ${subVal}`;
+            if (subVal.toLowerCase().includes('failed') || subVal.toLowerCase().includes('failed')) {
+              dd.className = 'status-' + subKey + '_failed';
+            }
+            dl.appendChild(dd);
+          });
+        }
+
+        card.appendChild(dl);
+        container.appendChild(card);
       })
       .catch(err => {
-        document.getElementById('status-list').innerHTML = `<dt style="color:red;">Error loading data: ${err}</dt>`;
+        document.getElementById('dashboard').innerHTML =
+          `<div class="card"><p style="color:red;">Error loading data: ${err}</p></div>`;
       });
   </script>
 </body>
